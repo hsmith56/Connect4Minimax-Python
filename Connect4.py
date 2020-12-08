@@ -4,7 +4,7 @@ import copy
 """
 TODO:
  - Add the different win conditions [vert,horiz,diag]
- - adjust isSameOver() to reflect accurate board states
+ - [[Done -> Accurately reflects game states and if game is over]] adjust isSameOver() to reflect accurate board states
  - [[Done* -> currently 0-6, simple fix later]] change moves to numbers 1-7 
  - [[Done -> makes move and returns true, otherwise false]] change logic to drop to lowest position 
  - [[Done -> returns list 0,6]] create is valid to get columns with open spots 
@@ -40,8 +40,8 @@ class Game:
 		"""
 		# 1 - returns true if there is a win across a row [Done]
 		# 2 - returns true if there is a win on a column [Done]
-		# 3 - returns true if diagional win from bottom left to top right
-		# 4 - returns true if diagional win from top left to bottom right 
+		# 3 - returns true if diagional win from bottom left to top right [Done]
+		# 4 - returns true if diagional win from top left to bottom right [Done]
 		# 5 - returns false if there is still empty spots to play [same as TicTacToe]
 		# 6 - returns true if no spots left to play, meaning a tie [same as TicTacToe]
 		"""
@@ -53,30 +53,34 @@ class Game:
 					self.winner = row[index]
 					return True
 
-		for col in range(len(self.board[0])):
+		# to call x,y cartesian coordinate do self.board[row][col]
+		for col in range(len(self.board[0])): # 2 Updated
 			for row in range(0,len(self.board)-3):
-				# to call x,y cartesian coordinate do self.board[row][col]
 				if self.board[row][col].control != None:
 					if self.board[row][col] == self.board[row+1][col] == self.board[row+2][col] == self.board[row+3][col]:
 						self.gameover = True
 						self.winner = self.board[row][col]
 						return True
 
-		if self.board[2][0].control != None: # 3
-			if self.board[2][0].control == self.board[1][1].control == self.board[0][2].control:
-				self.gameover = True
-				self.winner = self.board[2][0].control
-				return True
-				
-		if self.board[0][0].control != None: # 4
-			if self.board[0][0] == self.board[1][1] == self.board[2][2]:
-				self.gameover = True
-				self.winner = self.board[0][0].control
-				return True
+		for col in range(len(self.board[0])-3): # 3 Updated
+			for row in range(len(self.board)-3,len(self.board)):
+				if self.board[row][col].control != None:
+					if self.board[row][col] == self.board[row-1][col+1] == self.board[row-2][col+2] == self.board[row-3][col+3]:
+						self.gameover = True
+						self.winner = self.board[row][col]
+						return True
 
-		for x in self.board: # 5
-			row = [l.control for l in x]
-			if None in row:
+		for col in range(len(self.board[0])-3): # 4 Updated
+			for row in range(0,len(self.board)-3):
+				if self.board[row][col].control != None:
+					if self.board[row][col] == self.board[row+1][col+1] == self.board[row+2][col+2] == self.board[row+3][col+3]:
+						self.gameover = True
+						self.winner = self.board[row][col]
+						return True
+
+		for row in self.board: # 5
+			check = [piece.control for piece in row]
+			if None in check:
 				return
 						
 		self.winner = 'Tie'	# 6	
@@ -99,32 +103,33 @@ class Piece:
 		self.piece = PIECES[control]
 		self.name = name
 
-	def __eq__(self, other):
-		return self.__dict__ == other.__dict__
+	# def __eq__(self, other):
+	# 	return self.__dict__ == other.__dict__
 
 def minimax(board, depth, maximizingPlayer):
-	if board.isGameOver():
-		if board.gameover:
-			if board.winner == board.p1.control:
-				return 10*depth
-			if board.winner == board.p2.control:
-				return -11*depth
+	if board.isGameOver() or depth == 0:
+		if board.winner == board.p1:
+			return 10*depth
+		if board.winner == board.p2:
+			return -11*depth
 		return 0
 
 	if maximizingPlayer:
 		value = -5
 		for pos in board.getEmpty():
 			boardCopy = copy.deepcopy(board)
-			boardCopy.move(boardCopy.p1,pos[0],pos[1])
+			boardCopy.move(boardCopy.p1,pos)
 			value = max(value, minimax(boardCopy, depth-1, False))
+		if value != 0: print(value)
 		return value
 
 	else:
 		value = 5
 		for pos in board.getEmpty():
 			boardCopy = copy.deepcopy(board)
-			boardCopy.move(boardCopy.p2,pos[0],pos[1])
+			boardCopy.move(boardCopy.p2,pos)
 			value = min(value, minimax(boardCopy, depth-1, True))
+		if value != 0: print(value)
 		return value
 
 def aiMove(game,p1):
@@ -135,27 +140,22 @@ def aiMove(game,p1):
 	pos = game.getEmpty()[0]
 	for pos in game.getEmpty():
 		gameCopy = copy.deepcopy(game)
-		gameCopy.move(p1, pos[0], pos[1])
+		gameCopy.move(p1, pos)
 		preMax = Value
-		Value = max(Value, minimax(gameCopy,4,False))
+		Value = max(Value, minimax(gameCopy,3,False))
 		if preMax != Value:
 			aiMove = pos
-	game.move(p1, aiMove[0], aiMove[1])
+	game.move(p1, aiMove)
 	return
 
 def playerMove(game,p2):
-	playerMove = input('Where would you like to move? ').split(sep=',')
+	playerMove = input('Where would you like to move? ')
 	print(playerMove)
-	playerMove = [int(playerMove[0]),int(playerMove[1])]
+	playerMove = int(playerMove)
 	while playerMove not in game.getEmpty():
-		playerMove = input('Please enter a valid position ').split(sep=',')
-		playerMove = [int(playerMove[0]),int(playerMove[1])]
-	game.move(p2, playerMove[0], playerMove[1])
-
-
-
-
-
+		playerMove = input('Please enter a valid position ')
+		playerMove = int(playerMove)
+	game.move(p2, playerMove)
 
 def newGame():
 	"""
@@ -184,32 +184,38 @@ def newGame():
 
 		if game.winner == "Tie":
 			print("Tie Game, better luck next time")
-		elif game.winner == game.p2.control:
+		elif game.winner == game.p2:
 			print("You won! Good job.")
 		else:	
 			print("Yeah you lost, unsurprising")
 
 		replay = input("Would you like to play again? [y/n] ").lower()		
 
-# newGame()
+newGame()
 def debug():
 	P1 = random.randint(0,1)
 	P2 = 1 if P1 == 0 else 0
 	p1 = Piece(P1,'AI')
 	p2 = Piece(P2,'Player')
 	debug = Game(p1, p2)
-	debug.move(p2, 0)
+	debug.move(p1, 0)
 	debug.printBoard()
-	debug.move(p2, 0)
+	debug.move(p1, 0)
+	debug.printBoard()
+	debug.isGameOver()
+	debug.move(p1, 0)
 	debug.printBoard()
 	debug.isGameOver()
 	debug.move(p2, 0)
-	debug.printBoard()
-	debug.isGameOver()
-	debug.move(p2, 0)
+	debug.move(p2, 1)
+	debug.move(p2, 1)
+	debug.move(p2, 1)
+	debug.move(p2, 2)
+	debug.move(p2, 2)
+	debug.move(p2, 3)
 	debug.printBoard()
 	debug.isGameOver()
 	print(debug.winner.piece)
 	#print(debug.getEmpty())
 
-debug()
+#debug()
