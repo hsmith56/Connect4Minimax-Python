@@ -1,19 +1,17 @@
 import random
 import copy
 
-PIECES = {0:'x',1:'o',None:'_'}
-
-
 """
-###What is left to do:
+TODO:
  - Add the different win conditions [vert,horiz,diag]
  - adjust isSameOver() to reflect accurate board states
- - change moves to numbers 1-7 [done* -> currently 0-6, simple fix later]
- - change logic to drop to lowest position [done -> makes move and returns true, otherwise false]
- - create is valid to get columns with open spots [done -> returns list 0,6]
+ - [[Done* -> currently 0-6, simple fix later]] change moves to numbers 1-7 
+ - [[Done -> makes move and returns true, otherwise false]] change logic to drop to lowest position 
+ - [[Done -> returns list 0,6]] create is valid to get columns with open spots 
  - change minimax to only play on x axis
 """
 
+PIECES = {0:'x',1:'o',None:'_'}
 
 class Game:
 	def __init__(self, p1, p2):
@@ -40,25 +38,29 @@ class Game:
 
 	def isGameOver(self):
 		"""
-		# 1 - returns true if there is a win across a row 
-		# 2 - returns true if there is a win on a column
+		# 1 - returns true if there is a win across a row [Done]
+		# 2 - returns true if there is a win on a column [Done]
 		# 3 - returns true if diagional win from bottom left to top right
-		# 4 - returns true if diagional win from top left to bottom right
-		# 5 - returns false if there is still empty spots to play
-		# 6 - returns true if no spots left to play, meaning a tie
+		# 4 - returns true if diagional win from top left to bottom right 
+		# 5 - returns false if there is still empty spots to play [same as TicTacToe]
+		# 6 - returns true if no spots left to play, meaning a tie [same as TicTacToe]
 		"""
-		for num, row in enumerate(self.board): # 1
-			if row.count(row[0]) == 3 and row[0].control != None:
-				self.gameover = True
-				self.winner = row[0].control
-				return True
 
-		for column in range(3): # 2
-			if self.board[0][column].control != None:
-				if self.board[0][column].control == self.board[1][column].control == self.board[2][column].control:
+		for num, row in enumerate(self.board): # 1 Updated
+			for index,pos in enumerate(row[0:len(row)-3]):
+				if row[index:index+4].count(pos) == 4 and row[index].control != None:
 					self.gameover = True
-					self.winner = self.board[0][column].control
+					self.winner = row[index]
 					return True
+
+		for col in range(len(self.board[0])):
+			for row in range(0,len(self.board)-3):
+				# to call x,y cartesian coordinate do self.board[row][col]
+				if self.board[row][col].control != None:
+					if self.board[row][col] == self.board[row+1][col] == self.board[row+2][col] == self.board[row+3][col]:
+						self.gameover = True
+						self.winner = self.board[row][col]
+						return True
 
 		if self.board[2][0].control != None: # 3
 			if self.board[2][0].control == self.board[1][1].control == self.board[0][2].control:
@@ -100,7 +102,6 @@ class Piece:
 	def __eq__(self, other):
 		return self.__dict__ == other.__dict__
 
-
 def minimax(board, depth, maximizingPlayer):
 	if board.isGameOver():
 		if board.gameover:
@@ -127,8 +128,8 @@ def minimax(board, depth, maximizingPlayer):
 		return value
 
 def aiMove(game,p1):
-	if [1,1] in game.getEmpty():
-		game.move(p1, 1, 1)
+	if game.board[5][3].control == None:
+		game.move(p1, 3)
 		return
 	Value = -1
 	pos = game.getEmpty()[0]
@@ -197,23 +198,18 @@ def debug():
 	p1 = Piece(P1,'AI')
 	p2 = Piece(P2,'Player')
 	debug = Game(p1, p2)
-	debug.move(p1, 0)
-	debug.printBoard()
 	debug.move(p2, 0)
 	debug.printBoard()
 	debug.move(p2, 0)
 	debug.printBoard()
-	debug.move(p1, 0)
-	debug.printBoard()
-	debug.move(p1, 0)
-	debug.printBoard()
+	debug.isGameOver()
 	debug.move(p2, 0)
 	debug.printBoard()
+	debug.isGameOver()
 	debug.move(p2, 0)
 	debug.printBoard()
-	debug.move(p2, 0)
-	debug.printBoard()
-
+	debug.isGameOver()
+	print(debug.winner.piece)
 	#print(debug.getEmpty())
 
 debug()
