@@ -8,9 +8,9 @@ PIECES = {0:'x',1:'o',None:'_'}
 ###What is left to do:
  - Add the different win conditions [vert,horiz,diag]
  - adjust isSameOver() to reflect accurate board states
- - change moves to numbers 1-7
- - change logic to drop to lowest position
- - create is valid to get columns with open spots
+ - change moves to numbers 1-7 [done* -> currently 0-6, simple fix later]
+ - change logic to drop to lowest position [done -> makes move and returns true, otherwise false]
+ - create is valid to get columns with open spots [done -> returns list 0,6]
  - change minimax to only play on x axis
 """
 
@@ -23,10 +23,13 @@ class Game:
 		self.p1 = p1
 		self.p2 = p2
 
-	def move(self, piece, x, y):
-		if self.board[x][y].control == None:
-			self.board[x][y] = piece
-			return True
+	def move(self, piece, x):
+		if self.board[0][x].control == None:
+			for row in range(len(self.board)-1,0,-1):
+				if self.board[row][x].control == None:
+					self.board[row][x] = piece
+					return True
+			self.board[0][x] = piece
 		return False
 
 	def printBoard(self):
@@ -80,14 +83,12 @@ class Game:
 		
 	def getEmpty(self):
 		"""
-		Returns a 2d array of all valid empty positions on a board
+		Returns an array of all valid empty positions on a board
 		"""
 		list1 = []
-		for row ,x in enumerate(self.board):
-			test = [l.control for l in x]
-			for y, piece in enumerate(test):
-				if piece == None:
-					list1.append([row,y])
+		for x, piece in enumerate(self.board[0]):
+			if piece.control == None:
+				list1.append(x)
 		return list1
 
 class Piece:
@@ -189,4 +190,30 @@ def newGame():
 
 		replay = input("Would you like to play again? [y/n] ").lower()		
 
-newGame()
+# newGame()
+def debug():
+	P1 = random.randint(0,1)
+	P2 = 1 if P1 == 0 else 0
+	p1 = Piece(P1,'AI')
+	p2 = Piece(P2,'Player')
+	debug = Game(p1, p2)
+	debug.move(p1, 0)
+	debug.printBoard()
+	debug.move(p2, 0)
+	debug.printBoard()
+	debug.move(p2, 0)
+	debug.printBoard()
+	debug.move(p1, 0)
+	debug.printBoard()
+	debug.move(p1, 0)
+	debug.printBoard()
+	debug.move(p2, 0)
+	debug.printBoard()
+	debug.move(p2, 0)
+	debug.printBoard()
+	debug.move(p2, 0)
+	debug.printBoard()
+
+	#print(debug.getEmpty())
+
+debug()
